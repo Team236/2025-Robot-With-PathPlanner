@@ -39,7 +39,7 @@ public class UpdateRobotPosition extends InstantCommand {
       Pose2d robotFieldPose = new Pose2d();
       if (alliance.get() == Alliance.Red) {
         robotFieldPose = LimelightHelpers.getBotPose2d_wpiRed("limelight");
-        s_Swerve.setPose(robotFieldPose);
+        s_Swerve.resetPose(robotFieldPose);
 
         double x1 = robotFieldPose.getX();
         double y1 = robotFieldPose.getY();
@@ -55,7 +55,7 @@ public class UpdateRobotPosition extends InstantCommand {
       else if (alliance.get() == Alliance.Blue) {
         robotFieldPose = LimelightHelpers.getBotPose2d_wpiBlue("limelight");
         robotFieldPose = LimelightHelpers.getBotPoseEstimate_wpiBlue("limelight").pose;
-        s_Swerve.setPose(robotFieldPose);
+        s_Swerve.resetPose(robotFieldPose);
         
         double x1 = robotFieldPose.getTranslation().getX();
         double y1 = robotFieldPose.getTranslation().getY();

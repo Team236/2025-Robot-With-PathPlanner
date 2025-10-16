@@ -78,7 +78,7 @@ public class TurnDriveReverse extends SequentialCommandGroup {
                 s_Swerve);
 
         addCommands(
-            new InstantCommand(() -> s_Swerve.setPose(exampleTrajectory.getInitialPose())),
+            new InstantCommand(() -> s_Swerve.resetPose(exampleTrajectory.getInitialPose())),
             swerveControllerCommand
         );
     }

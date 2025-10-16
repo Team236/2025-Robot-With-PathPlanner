@@ -79,7 +79,7 @@ public class BlueLLeg1 extends  SequentialCommandGroup  {
             s_Swerve);
 
     addCommands(
-        new InstantCommand(() -> s_Swerve.setPose(legTrajectory.getInitialPose())),
+        new InstantCommand(() -> s_Swerve.resetPose(legTrajectory.getInitialPose())),
         swerveControllerCommand
     );
 }

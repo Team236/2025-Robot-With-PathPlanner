@@ -62,8 +62,8 @@ public class NewNewFieldCentricTargetLeft extends SequentialCommandGroup {
     //new InstantCommand (s_Swerve::setupValues, s_Swerve),
     //new InstantCommand(() -> this.setupValues()),//Needs to be command here, or method above ok???
 
-    //new InstantCommand(() -> s_Swerve.setPose(exampleTrajectory.getInitialPose())),
-    new InstantCommand(() -> s_Swerve.setPose(currentTrajectory.getInitialPose())).withTimeout(1),
+    //new InstantCommand(() -> s_Swerve.resetPose(exampleTrajectory.getInitialPose())),
+    new InstantCommand(() -> s_Swerve.resetPose(currentTrajectory.getInitialPose())).withTimeout(1),
 
     //swerveControllerCommand,
     currentSwerveControllerCommand.withTimeout(5),  

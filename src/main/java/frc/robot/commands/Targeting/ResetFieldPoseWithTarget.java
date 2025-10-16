@@ -22,6 +22,6 @@ public class ResetFieldPoseWithTarget extends InstantCommand {
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
-    s_Swerve.resetFldPoseWithTarget();
+    s_Swerve.resetFieldPoseWithTarget();
   }
 }

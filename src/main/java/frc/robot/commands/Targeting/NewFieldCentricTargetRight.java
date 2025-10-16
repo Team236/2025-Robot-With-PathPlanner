@@ -35,7 +35,7 @@ public class NewFieldCentricTargetRight extends SequentialCommandGroup {
   
   public NewFieldCentricTargetRight(Swerve s_Swerve) {
     addCommands(
-          new InstantCommand(() -> s_Swerve.setPose(s_Swerve.currentTrajectory.getInitialPose())),
+          new InstantCommand(() -> s_Swerve.resetPose(s_Swerve.currentTrajectory.getInitialPose())),
 
           s_Swerve.currentSwerveControllerCommand,
 

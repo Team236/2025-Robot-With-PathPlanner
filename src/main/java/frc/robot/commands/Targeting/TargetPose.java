@@ -44,7 +44,7 @@ public class TargetPose extends InstantCommand { //Takes a pose and will move th
                 robotFieldPose = LimelightHelpers.getBotPose2d_wpiRed("limelight");
             }
 
-            s_Swerve.setPose(robotFieldPose);
+            s_Swerve.resetPose(robotFieldPose);
 
             double x1 = robotFieldPose.getX();
             double y1 = robotFieldPose.getY();

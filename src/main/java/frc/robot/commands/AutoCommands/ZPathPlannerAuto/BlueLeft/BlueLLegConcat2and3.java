@@ -82,7 +82,7 @@ public BlueLLegConcat2and3(Swerve s_Swerve, boolean reversed) {
             s_Swerve);
 
     addCommands(
-        new InstantCommand(() -> s_Swerve.setPose(combinedTrajectory.getInitialPose())),
+        new InstantCommand(() -> s_Swerve.resetPose(combinedTrajectory.getInitialPose())),
         swerveControllerCommand
     );
 }

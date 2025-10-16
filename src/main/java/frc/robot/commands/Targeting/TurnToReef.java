@@ -46,11 +46,11 @@ public class TurnToReef extends InstantCommand {
       
       if (alliance.get() == Alliance.Red) {
         robotFieldPose = LimelightHelpers.getBotPose2d_wpiRed("limelight");
-        s_Swerve.setPose(robotFieldPose);
+        s_Swerve.resetPose(robotFieldPose);
       }
       else if (alliance.get() == Alliance.Blue) {
         robotFieldPose = LimelightHelpers.getBotPose2d_wpiBlue("limelight");
-        s_Swerve.setPose(robotFieldPose);
+        s_Swerve.resetPose(robotFieldPose);
       }
 
       double turnAngle = LimelightHelpers.getTargetPose_RobotSpace("limelight")[4];

@@ -87,7 +87,7 @@ import frc.robot.subsystems.Swerve;
             s_Swerve);
 
     addCommands(
-        new InstantCommand(() -> s_Swerve.setPose(leg2and3Trajectory.getInitialPose())),
+        new InstantCommand(() -> s_Swerve.resetPose(leg2and3Trajectory.getInitialPose())),
         swerveControllerCommand
     );
 }

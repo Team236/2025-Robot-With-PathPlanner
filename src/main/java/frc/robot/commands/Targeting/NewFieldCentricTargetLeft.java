@@ -64,7 +64,7 @@ public class NewFieldCentricTargetLeft extends SequentialCommandGroup {
     //   s_Swerve.driveTargetingValues[4],
     //   s_Swerve.driveTargetingValues[5])
 
-    new InstantCommand(() -> s_Swerve.setPose(s_Swerve.currentTrajectory.getInitialPose())),
+    new InstantCommand(() -> s_Swerve.resetPose(s_Swerve.currentTrajectory.getInitialPose())),
 
     new ProxyCommand(() -> s_Swerve.currentSwerveControllerCommand),
 

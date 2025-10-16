@@ -1,7 +1,6 @@
 package frc.robot.subsystems;
 
 import frc.robot.SwerveModule;
-import frc.robot.commands.Targeting.ResetFieldPoseWithTarget;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -9,16 +8,27 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.hardware.Pigeon2;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.GoalEndState;
+import com.pathplanner.lib.path.IdealStartingState;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.Waypoint;
+import com.pathplanner.lib.util.FlippingUtil;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.ProfiledPIDController;
-import edu.wpi.first.math.estimator.PoseEstimator;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -31,16 +41,19 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
 public class Swerve extends SubsystemBase {
-    public SwerveDriveOdometry swerveOdometry;
     public SwerveModule[] mSwerveMods;
     public Pigeon2 gyro;
-    public SwerveDrivePoseEstimator m_poseEstimator; //replacement for swerve drive odometry; .update should be called every robot loop
+    public SwerveDrivePoseEstimator m_poseEstimator; // this pose estimator can do essentially everything swerve odometry can, with added vision capabilities
     public double poseAngle;
     public double poseForwardDistance;
     public double poseSideDistance;
@@ -50,6 +63,9 @@ public class Swerve extends SubsystemBase {
     private double tv;
     public Pose2d poseLL; //want to use this pose after this command, after moving with odometry
     public Pose2d targetPose;
+
+    //SmartDashboard
+    private Field2d field = new Field2d();
 
     //targeting
     public SwerveControllerCommand currentSwerveControllerCommand;
@@ -71,30 +87,60 @@ public class Swerve extends SubsystemBase {
             new SwerveModule(3, Constants.Swerve.Mod3.constants) //back right
         };
 
-        driveTargetingValues = new double[6];
-        driveTargetingValues[0] = 0;
-        driveTargetingValues[1] = 1;
-        driveTargetingValues[2] = 2;
-        driveTargetingValues[3] = 3;
-        driveTargetingValues[4] = 4;
-        driveTargetingValues[5] = 5;
+        /* Here we use SwerveDrivePoseEstimator so that we can fuse odometry readings, for 3D targeting. 
+        The numbers used below are robot specific, and should be tuned. */
+        m_poseEstimator = new SwerveDrivePoseEstimator(
+            Constants.Swerve.swerveKinematics,
+            gyro.getRotation2d(),
+            new SwerveModulePosition[] {
+                mSwerveMods[0].getPosition(), //front left
+                mSwerveMods[1].getPosition(), //front right
+                mSwerveMods[2].getPosition(), //back left
+                mSwerveMods[3].getPosition()  //back right
+            },
+            new Pose2d(),
+            VecBuilder.fill(0.05, 0.05, Math.toRadians(5)), //std deviations in X, Y (meters), and angle of the pose estimate
+            VecBuilder.fill(0.5, 0.5, Math.toRadians(30))  //std deviations  in X, Y (meters) and angle of the vision (LL) measurement
+        );
 
-        swerveOdometry = new SwerveDriveOdometry(Constants.Swerve.swerveKinematics, getGyroYaw(), getModulePositions());
+        SmartDashboard.putData("Field", field);
 
-/* Here we use SwerveDrivePoseEstimator so that we can fuse odometry readings, for 3D targeting. 
-The numbers used below are robot specific, and should be tuned. */
-   m_poseEstimator = new SwerveDrivePoseEstimator(
-     Constants.Swerve.swerveKinematics,
-      gyro.getRotation2d(),
-      new SwerveModulePosition[] {
-        mSwerveMods[0].getPosition(), //front left
-        mSwerveMods[1].getPosition(), //front right
-        mSwerveMods[2].getPosition(), //back left
-        mSwerveMods[3].getPosition()  //back right
-      },
-      new Pose2d(),
-      VecBuilder.fill(0.05, 0.05, Math.toRadians(5)), //std deviations in X, Y (meters), and angle of the pose estimate
-      VecBuilder.fill(0.5, 0.5, Math.toRadians(30)));  //std deviations  in X, Y (meters) and angle of the vision (LL) measurement
+        // PATH PLANNER
+
+        SmartDashboard.putString("Starting swerve and pathplanner", "yes");
+
+        RobotConfig config = null; // this is a PathPlannerLib object that will store the robot config values like mass, wheel numbers, etc. that are set in the App GUI
+        try {
+            config = RobotConfig.fromGUISettings();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // PathPlanner requires an "AutoBuilder" object to be configured in order to run any paths. This object needs access to the robot's drive/pose methods and other
+        // important information. PathPlanner recommends that this is configured in the drive subsystem's constructor (because it can take a bit to load), so it's done here.
+        if (config == null) {
+            System.out.println("PathPlanner RobotConfig settings null, may have errored");
+        } else {
+            AutoBuilder.configure(
+                this::getPose,
+                this::resetPose,
+                this::getChassisSpeeds,
+                (speeds, feedforwards) -> driveWithChassisSpeeds(speeds),
+                new PPHolonomicDriveController(
+                    Constants.PathPlanner.TRANSLATION_PID_CONSTANTS, //translation
+                    Constants.PathPlanner.ROTATION_PID_CONSTANTS // rotation -- both can be tuned I think
+                ),
+                config,
+                () -> { 
+                    Optional<Alliance> alliance = DriverStation.getAlliance();
+                    if (alliance.isPresent()) {
+                        return alliance.get() == Alliance.Red; //0 = red, 1 = blue
+                    }
+                    return false;
+                },
+                this
+            );
+        }
     }
 
 //Methods start here:
@@ -145,12 +191,144 @@ The numbers used below are robot specific, and should be tuned. */
         return positions;
     }
 
-    public Pose2d getPose() {
-        return swerveOdometry.getPoseMeters();
+    // drive method used/required for path planner. Basically just a rewritten drive() (refer to above) method 
+    public void driveWithChassisSpeeds(ChassisSpeeds chassisSpeeds) {
+        SwerveModuleState[] swerveModuleStates = Constants.Swerve.swerveKinematics.toSwerveModuleStates(chassisSpeeds);
+        SwerveDriveKinematics.desaturateWheelSpeeds(swerveModuleStates, Constants.Swerve.maxSpeed);
+
+        for(SwerveModule mod : mSwerveMods){
+            mod.setDesiredState(swerveModuleStates[mod.moduleNumber], true); //TODO: may be worth it to check out closedLoop, especially for auto. light research indicates it may be more precise (but less responsive to input)?
+        }
     }
 
-    public void setPose(Pose2d pose) {
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), pose);
+    //Follows path that assumes starting pose is robot's current pose (by RESETTING the robots odometry to be the start pose of the path)
+    public Command followPathCommand(String pathName) {
+        try {
+            SmartDashboard.putNumber("RobotPoseX before path start", this.getPose().getX());
+            SmartDashboard.putNumber("RobotPoseY before path start", this.getPose().getY());
+            SmartDashboard.putNumber("RobotPoseRotation before path start", this.getPose().getRotation().getDegrees());
+
+            PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+            
+            Pose2d bluePathStartingPose = path.getStartingHolonomicPose().get(); // starting pose of path, defaults to blue side coordinates
+            
+            if (DriverStation.getAlliance().get() == Alliance.Red) { // if red alliance, flip the path starting pose
+                this.resetPose(FlippingUtil.flipFieldPose(bluePathStartingPose));
+            } else  {
+                this.resetPose(path.getStartingHolonomicPose().get());
+            }
+
+            SmartDashboard.putNumber("RobotPoseX AFTER", this.getPose().getX());
+            SmartDashboard.putNumber("RobotPoseY AFTER", this.getPose().getY());
+            SmartDashboard.putNumber("RobotPoseRotation AFTER", this.getPose().getRotation().getDegrees());
+
+            Waypoint pathStartWaypoint = path.getWaypoints().get(0);
+            SmartDashboard.putNumber("Path start  X", pathStartWaypoint.anchor().getX());
+            SmartDashboard.putNumber("Path start  Y", pathStartWaypoint.anchor().getY());
+            SmartDashboard.putNumber("Path start  Rotation", path.getStartingHolonomicPose().get().getRotation().getDegrees());
+
+            Waypoint pathEndWaypoint = path.getWaypoints().get(path.getWaypoints().size() - 1);
+            SmartDashboard.putNumber("Path end  X", pathEndWaypoint.anchor().getX());
+            SmartDashboard.putNumber("Path end  Y", pathEndWaypoint.anchor().getY());
+            SmartDashboard.putNumber("Path end  Rotation", path.getGoalEndState().rotation().getDegrees());
+
+            FieldObject2d start = field.getObject("PathStart");
+            start.setPose(pathStartWaypoint.anchor().getX(), pathStartWaypoint.anchor().getY(), path.getIdealStartingState().rotation());
+            
+            FieldObject2d end = field.getObject("PathEnd");
+            end.setPose(pathEndWaypoint.anchor().getX(), pathEndWaypoint.anchor().getY(), path.getGoalEndState().rotation());
+
+            return AutoBuilder.followPath(path);
+        } catch (Exception e) {
+            DriverStation.reportError(e.getMessage(), e.getStackTrace());
+            return Commands.none();
+        }
+    }
+
+    // Barebones and default PathPlanner way of following a path. This means that if the robot is not at the start pose of the path,
+    // it will attempt to move there (this is done by PathPlanner). Therefore, ONLY USE if you know robot has a pose and it is at/extremely close to start pose
+    public Command followPathCommandNoReset(String pathName) {
+        try {
+            PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+
+            return AutoBuilder.followPath(path);
+        } catch (Exception e) {
+            DriverStation.reportError(e.getMessage(), e.getStackTrace());
+            return Commands.none();
+        }
+    }
+
+    //Follows a path where end pose does not change, but it starts at the robot's current pose. Does not retain event markers (if applicable)
+    public Command followPathCommandRobotStartingPose(String pathName) {
+        try {
+            PathPlannerPath originalPath = PathPlannerPath.fromPathFile(pathName);
+            PathConstraints constraints = originalPath.getGlobalConstraints(); // just use original path's constraints by default. if this doesn't work then can reconstruct
+
+            List<Waypoint> newWaypoints = originalPath.getWaypoints();
+            newWaypoints.set(0, PathPlannerPath.waypointsFromPoses(this.getPose()).get(0)); // turns robot's current pose into waypoint, sets it as first waypoint
+
+            PathPlannerPath path = new PathPlannerPath(
+                newWaypoints, 
+                constraints, 
+                null, 
+                originalPath.getGoalEndState()
+            );
+            
+            return AutoBuilder.followPath(path);
+        } catch (Exception e) {
+            DriverStation.reportError(e.getMessage(), e.getStackTrace());
+            return Commands.none();
+        }
+    }
+
+    //Follows path relative to robot's current pose (shifts all poses and states to accomodate). Different than just changing the starting pose to Robot and keeping end same (as above)
+    public Command followPathCommandRobotRelative(String pathName) {
+        try {
+            PathPlannerPath originalPath = PathPlannerPath.fromPathFile(pathName);
+
+            PathConstraints constraints = originalPath.getGlobalConstraints(); // just use original path's constraints by default. if this doesn't work then can reconstruct
+            IdealStartingState originalStartingState = originalPath.getIdealStartingState();
+            GoalEndState originalGoalEndState = originalPath.getGoalEndState();
+            
+            Pose2d pathInitialPose = originalPath.getStartingHolonomicPose().get(); 
+            List<Pose2d> newPoses = new ArrayList<>();
+            newPoses.add(this.getPose()); // start with current robot pose
+
+            int i = 0;
+            for (Pose2d pose : originalPath.getPathPoses()) {
+                if (i > 0) { // skip first pose since it has already been added
+                    newPoses.add(this.getPose().transformBy(pose.minus(pathInitialPose))); 
+                }
+
+                i++;
+            }
+
+            PathPlannerPath path = new PathPlannerPath(
+                PathPlannerPath.waypointsFromPoses(newPoses),
+                constraints, 
+                new IdealStartingState(originalStartingState.velocity(), originalStartingState.rotation().plus(getHeading().minus(pathInitialPose.getRotation()))), 
+                new GoalEndState(originalGoalEndState.velocity(), originalGoalEndState.rotation().plus(getHeading().minus(pathInitialPose.getRotation())))
+            );
+
+            return AutoBuilder.followPath(path);
+        } catch (Exception e) {
+            DriverStation.reportError(e.getMessage(), e.getStackTrace());
+            return Commands.none();
+        }
+    }
+
+    public ChassisSpeeds getChassisSpeeds() {
+        SwerveModuleState[] states = getModuleStates();
+        ChassisSpeeds fieldRelFromStates = Constants.Swerve.swerveKinematics.toChassisSpeeds(states);
+        return ChassisSpeeds.fromFieldRelativeSpeeds(fieldRelFromStates, getHeading());
+    }
+
+    public Pose2d getPose() {
+        return m_poseEstimator.getEstimatedPosition();
+    }
+
+    public void resetPose(Pose2d pose) {
+        m_poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), pose);
     }
 
     public Rotation2d getHeading(){
@@ -158,11 +336,11 @@ The numbers used below are robot specific, and should be tuned. */
     }
 
     public void setHeading(Rotation2d heading){
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
+        m_poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), heading));
     }
 
     public void zeroHeading(){
-        swerveOdometry.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
+        m_poseEstimator.resetPosition(getGyroYaw(), getModulePositions(), new Pose2d(getPose().getTranslation(), new Rotation2d()));
     }
 
     public Rotation2d getGyroYaw() {
@@ -189,11 +367,11 @@ The numbers used below are robot specific, and should be tuned. */
         if (ally.isPresent()  && (tv == 1)) { //have alliance color and see target
             if (ally.get() == Alliance.Red){
             poseLL = LimelightHelpers.getBotPose2d_wpiRed("limelight");
-            //  s_Swerve.setPose(poseLL); //do this later in ResetPose command
+            //  s_Swerve.resetPose(poseLL); //do this later in ResetPose command
             }
             if (ally.get() == Alliance.Blue){
             poseLL = LimelightHelpers.getBotPose2d_wpiBlue("limelight");
-            // s_Swerve.setPose(poseLL); //do this later in ResetPose command
+            // s_Swerve.resetPose(poseLL); //do this later in ResetPose command
             }   
         }
         //else do nothing
@@ -208,20 +386,64 @@ The numbers used below are robot specific, and should be tuned. */
             this.targetPose = targetPose; //do this later in ResetPose command
         }   
 
-        // this.setPose(targetPose);
+        // this.resetPose(targetPose);
 
     }
 
-    public void resetFldPoseWithTarget() {
+    public void resetFieldPoseWithTarget() {
         if (targetPose != null) {
-            setPose(targetPose);
+            resetPose(targetPose);
         }
     }
 
     public void resetLLPose() {
         if (poseLL != null) {
-            setPose(poseLL);
+            resetPose(poseLL);
         }
+    }
+
+public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, double turnAngle1, double fwdDist2, double sideDist2, double turnAngle2, boolean reversed) {
+    double deltaFwd = fwdDist2-fwdDist1;
+    double deltaSide = sideDist2 - sideDist1;
+    double deltaAngle = turnAngle2- turnAngle1;
+
+        TrajectoryConfig config =
+            new TrajectoryConfig(
+                    Constants.AutoConstants.kMaxSpeedMetersPerSecond,
+                    Constants.AutoConstants.kMaxAccelerationMetersPerSecondSquared)
+                .setKinematics(Constants.Swerve.swerveKinematics).setReversed(reversed);
+
+        // An example trajectory to follow.  All units in meters.
+        Trajectory exampleTrajectory =
+        TrajectoryGenerator.generateTrajectory(
+            // Start at the origin facing the +X direction
+             new Pose2d(fwdDist1, sideDist1, new Rotation2d((turnAngle1))),
+            // Pass through these interior waypoints
+            List.of(
+                   new Translation2d((fwdDist1+0.05*deltaFwd), (sideDist1+0.05*deltaSide)), 
+                   new Translation2d((fwdDist1+0.1*deltaFwd), (sideDist1+0.1*deltaSide)),
+                   new Translation2d((fwdDist1+0.15*deltaFwd), (sideDist1+0.15*deltaSide)),
+                   new Translation2d((fwdDist1+0.2*deltaFwd), (sideDist1+0.2*deltaSide)), 
+                   new Translation2d((fwdDist1+0.25*deltaFwd), (sideDist1+0.25*deltaSide)),
+                   new Translation2d((fwdDist1+0.3*deltaFwd), (sideDist1+0.3*deltaSide)),
+                   new Translation2d((fwdDist1+0.35*deltaFwd), (sideDist1+0.35*deltaSide)), 
+                   new Translation2d((fwdDist1+0.4*deltaFwd), (sideDist1+0.4*deltaSide)),
+                   new Translation2d((fwdDist1+0.45*deltaFwd), (sideDist1+0.45*deltaSide)), 
+                   new Translation2d((fwdDist1+0.5*deltaFwd), (sideDist1+0.5*deltaSide)),
+                   new Translation2d((fwdDist1+0.55*deltaFwd), (sideDist1+0.55*deltaSide)),
+                   new Translation2d((fwdDist1+0.6*deltaFwd), (sideDist1+0.6*deltaSide)), 
+                   new Translation2d((fwdDist1+0.65*deltaFwd), (sideDist1+0.65*deltaSide)),
+                   new Translation2d((fwdDist1+0.7*deltaFwd), (sideDist1+0.7*deltaSide)),
+                   new Translation2d((fwdDist1+0.75*deltaFwd), (sideDist1+0.75*deltaSide)), 
+                   new Translation2d((fwdDist1+0.8*deltaFwd), (sideDist1+0.8*deltaSide)),
+                   new Translation2d((fwdDist1+0.85*deltaFwd), (sideDist1+0.85*deltaSide)), 
+                   new Translation2d((fwdDist1+0.9*deltaFwd), (sideDist1+0.9*deltaSide)),
+                   new Translation2d((fwdDist1+0.95*deltaFwd), (sideDist1+0.95*deltaSide))
+                   ),  
+            // End here
+            new Pose2d(fwdDist2, sideDist2, new Rotation2d((turnAngle2 + Math.PI))), //add 180 because target and robot are facing opposite directions
+            config);
+        return exampleTrajectory;
     }
 
     /**
@@ -550,13 +772,6 @@ The numbers used below are robot specific, and should be tuned. */
          }
     }
 
-/** Updates the field relative position of the robot. */
-//THIS METHOD WAS NOT USED IN 2025 SEASON - SHOULD TEST FOR 2026
-//USE IN PERIODIC OF SWERVE SUBSYSTEM TO REPLACE swerveOdometry.update
-//TO ADD IN VISION MEASUREMENTS TO ODOMETRY
-//TEST BY USING FIELD CENTRIC TARGETING AND THEN BY WATCHING getPoseMeters ON DASHBOARD WHILE DRIVING
-//swerveOdometry.update(getGyroYaw(), //DELETE THIS
-//MegaTag2UpdateOdometry(); //method in Swerve subysystem  // ADD THIS
     public void MegaTag2UpdateOdometry() {
         /* Replaced below with m_poseEstimator.update(getGyroYaw(), getModulePositions()); as done in periodic for swerve odometry
         m_poseEstimator.update(
@@ -591,39 +806,35 @@ The numbers used below are robot specific, and should be tuned. */
         }
         else if (useMegaTag2 == true)
         {   // only incorporate Limelight's estimates when more than one tag is visible (tagcount >= 1)
-          LimelightHelpers.SetRobotOrientation("limelight", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
-          LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
-          if(Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
-          {
-            doRejectUpdate = true;
+            LimelightHelpers.SetRobotOrientation("limelight", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
+            LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
+            if(Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+            {
+                doRejectUpdate = true;
+            }
+            if(mt2.tagCount == 0)
+            {
+                doRejectUpdate = true;
+            }
+            if(!doRejectUpdate)   // if doRejectUpdate is false (or NOT true), then update the pose estimator
+            {
+                m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
+                m_poseEstimator.addVisionMeasurement(
+                    mt2.pose,
+                    mt2.timestampSeconds);
           }
-          if(mt2.tagCount == 0)
-          {
-            doRejectUpdate = true;
-          }
-          if(!doRejectUpdate)   // if doRejectUpdate is false (or NOT true), then update the pose estimator
-          {
-            m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,9999999));
-            m_poseEstimator.addVisionMeasurement(
-                mt2.pose,
-                mt2.timestampSeconds);
-          }
-      }
+        }
     }
 
     @Override
     public void periodic(){
-       swerveOdometry.update(getGyroYaw(), getModulePositions());
-      // swerveOdometry.getPoseMeters();
+      //  SmartDashboard.putNumber("limelight standoff fwd", LimelightHelpers.getTargetPose_CameraSpace("limelight")[2]);
 
-      //TO ADD IN VISION MEASUREMENTS TO ODOMETRY, REPLACE LINE ABOVE WITH THE LINE BELOW (???)
-      //TEST BY USING FIELD CENTRIC TARGETING AND THEN BY WATCHING THE getPoseMeters ON DASHBOARD WHILE DRIVING
-      //MegaTag2UpdateOdometry(); //method in Swerve subysystem
-      //swerveOdometry.getPoseMeters();
-
-
-
-   //  SmartDashboard.putNumber("limelight standoff fwd", LimelightHelpers.getTargetPose_CameraSpace("limelight")[2]);
+    //    swerveOdometry.update(getGyroYaw(), getModulePositions());
+        MegaTag2UpdateOdometry();
+       SmartDashboard.putNumber("** RobotPoseX (Estimator)", m_poseEstimator.getEstimatedPosition().getX());
+       SmartDashboard.putNumber("** RobotPoseY (Estimator)", m_poseEstimator.getEstimatedPosition().getY());
+    //    System.out.println(swerveOdometry.getPoseMeters().getX() + " " + swerveOdometry.getPoseMeters().getY() + " Rotation: " + swerveOdometry.getPoseMeters().getRotation().getDegrees());
 
         //for(SwerveModule mod : mSwerveMods){
          // SmartDashboard.putNumber("Mod " + mod.moduleNumber + " CANcoder degrees", mod.getCANcoder().getDegrees());

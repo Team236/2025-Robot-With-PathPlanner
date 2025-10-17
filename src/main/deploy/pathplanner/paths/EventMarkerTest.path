@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 2.0,
-        "y": 7.0
+        "x": 7.164097603520608,
+        "y": 2.2226471629348943
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.0,
-        "y": 7.0
+        "x": 6.7698683250572955,
+        "y": 2.2362412759853534
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 4.0,
-        "y": 6.0
+        "x": 6.144539124736183,
+        "y": 2.2226471629348943
       },
       "prevControl": {
-        "x": 3.0,
-        "y": 6.0
+        "x": 6.837838890309593,
+        "y": 2.2362412759853534
       },
       "nextControl": null,
       "isLocked": false,
@@ -34,9 +34,14 @@
   "eventMarkers": [
     {
       "name": "coralGrab",
-      "waypointRelativePos": 0,
+      "waypointRelativePos": 0.6657931970365175,
       "endWaypointRelativePos": null,
-      "command": null
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "coralGrab"
+        }
+      }
     }
   ],
   "globalConstraints": {

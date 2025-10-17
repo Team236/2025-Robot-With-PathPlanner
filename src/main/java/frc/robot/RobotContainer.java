@@ -4,6 +4,8 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot;
 
+import java.util.Set;
+
 import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -13,6 +15,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -259,6 +262,8 @@ lb1.onTrue(algaeGrab);//grab and hold
 lm1.onTrue(algaeLowPickup);
 lt1.onTrue(algaeHighPickup);
 
+//path planner
+x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("EventMarkerTest"), Set.of(s_Swerve)));
 
 //a.onTrue(turnOnly225);
 //b.onTrue(turnOnlyNeg90);

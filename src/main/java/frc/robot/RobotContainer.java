@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.POVButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.commands.OrientWithLL;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.commands.AlgaeHoldCommands.AlgaeGrab;
 import frc.robot.commands.AlgaeHoldCommands.AlgaeL3Pickup;
@@ -27,22 +26,6 @@ import frc.robot.commands.AlgaeHoldCommands.AlgaeRelease;
 import frc.robot.commands.AlgaePivotCommands.ManualAlgaePivot;
 import frc.robot.commands.AlgaePivotCommands.PIDAlgaePivot;
 import frc.robot.commands.AlgaePivotCommands.PIDToElevSafePosition;
-import frc.robot.commands.AutoCommands.DriveFwdAndSideAndTurn;
-import frc.robot.commands.AutoCommands.Center.CenterNoAlgae;
-import frc.robot.commands.AutoCommands.Center.CtrScore1;
-import frc.robot.commands.AutoCommands.Left.FullRunLeft;
-import frc.robot.commands.AutoCommands.Left.Leg1Left;
-import frc.robot.commands.AutoCommands.Left.Leg1PracticeFieldTest;
-import frc.robot.commands.AutoCommands.Left.Leg1and2Practice;
-import frc.robot.commands.AutoCommands.Left.Leg2Left;
-import frc.robot.commands.AutoCommands.Left.Leg2PracticeField;
-import frc.robot.commands.AutoCommands.Left.Leg3Left;
-import frc.robot.commands.AutoCommands.Left.Legs1and2Left;
-import frc.robot.commands.AutoCommands.Right.FullRunRight;
-import frc.robot.commands.AutoCommands.Right.Leg1Right;
-import frc.robot.commands.AutoCommands.Right.Leg2Right;
-import frc.robot.commands.AutoCommands.Right.Leg3Right;
-import frc.robot.commands.AutoCommands.Right.Legs1and2Right;
 import frc.robot.commands.CoralHoldCommands.CoralGrabWithCounter;
 // import frc.robot.commands.CoralHoldCommands.CoralSeqGrabCount;
 import frc.robot.commands.CoralHoldCommands.CoralGrab;
@@ -53,29 +36,6 @@ import frc.robot.commands.ElevatorCommands.ClimbDownSequence;
 import frc.robot.commands.ElevatorCommands.DangerManualUpDown;
 import frc.robot.commands.ElevatorCommands.ElevMotionMagicPID;
 import frc.robot.commands.ElevatorCommands.PrepForClimb;
-import frc.robot.commands.Scoring.L1_Pt2;
-import frc.robot.commands.Scoring.L1_Pt1;
-import frc.robot.commands.Scoring.L2_Pt2;
-import frc.robot.commands.Scoring.L2_Pt1;
-import frc.robot.commands.Scoring.L3_Pt2;
-import frc.robot.commands.Scoring.L3_Pt1;
-import frc.robot.commands.Scoring.L4_Pt2;
-import frc.robot.commands.Scoring.L4_Pt2_Algae_Bump;
-import frc.robot.commands.Scoring.L4_Pt1;
-import frc.robot.commands.Targeting.AlgaeTarget;
-import frc.robot.commands.Targeting.CoralLeftTarget;
-import frc.robot.commands.Targeting.CoralRightTarget;
-import frc.robot.commands.Targeting.FieldCentricTargetAlgae;
-import frc.robot.commands.Targeting.FieldCentricTargetLeft;
-import frc.robot.commands.Targeting.FieldCentricTargetRight;
-import frc.robot.commands.Targeting.NewFieldCentricTargetLeft;
-import frc.robot.commands.Targeting.NewFieldCentricTargetRight;
-import frc.robot.commands.Targeting.NewNewFieldCentricTargetLeft;
-import frc.robot.commands.Targeting.TargetAllParallel;
-import frc.robot.commands.Targeting.TargetAngle;
-import frc.robot.commands.Targeting.TargetAngleSide;
-import frc.robot.commands.Targeting.TargetForwardDistance;
-import frc.robot.commands.Targeting.TargetSideDistance;
 import frc.robot.subsystems.AlgaeHold;
 import frc.robot.subsystems.AlgaePivot;
 import frc.robot.subsystems.Elevator;
@@ -121,52 +81,13 @@ public class RobotContainer {
 
    //COMMANDS
 
-   //Drive
-    private final OrientWithLL orientWithLL = new OrientWithLL(s_Swerve);
-
-   //Targeting
-    private final AlgaeTarget algaeTarget = new AlgaeTarget(s_Swerve);
-    private final CoralLeftTarget coralLeftTarget = new CoralLeftTarget(s_Swerve);
-    private final CoralRightTarget coralRightTarget = new CoralRightTarget(s_Swerve);
-    //private final GoToCoralRightLL goToCoralRightLL = new GoToCoralRightLL(s_Swerve);
-    // private final GoToCoralLeftFwdSide goToCoralLeftLL = new GoToCoralLeftFwdSide(s_Swerve);
-   // private final UpdateRobotPosition updateRobotPosition = new UpdateRobotPosition(s_Swerve);
-   // private final UpdateTargetPosition updateTargetPosition = new UpdateTargetPosition(s_Swerve);
-   // private final GoToCoralLeftLL goToCoralLeftLL = new GoToCoralLeftLL(s_Swerve);
-    private final FieldCentricTargetLeft fieldCentricTargetLeft = new FieldCentricTargetLeft(s_Swerve);
-    private final FieldCentricTargetRight fieldCentricTargetRight = new FieldCentricTargetRight(s_Swerve);
-    private final FieldCentricTargetAlgae fieldCentricTargetAlgae = new FieldCentricTargetAlgae(s_Swerve);
-    private final NewFieldCentricTargetLeft newFieldCentricTargetLeft = new NewFieldCentricTargetLeft(s_Swerve);
-    //private final NewNewFieldCentricTargetLeft newNewFieldCentricTargetLeft = new NewNewFieldCentricTargetLeft(s_Swerve);
-  // private final FieldCentricTargetCameraToTag fieldCentricTargetCameraToTag = new FieldCentricTargetCameraToTag(s_Swerve);
-   //private final TestAutoSequence testAutoSequence = new TestAutoSequence(s_Swerve);
-
-
-  //NOTE - STANDOFF FWD IS WITHOUT THE BUMPER - ADD BUMPER DEPTH AS NEEDEDD
-    private final TargetAllParallel targetAllParallel = new TargetAllParallel(s_Swerve, 12, 0);
-    private final TargetAngle targetAngle =  new TargetAngle(s_Swerve);
-    private final TargetForwardDistance targetForwardDistance = new TargetForwardDistance(s_Swerve, 9);
-    private final TargetSideDistance targetsideDistance = new TargetSideDistance(s_Swerve, 6.5);
-    private final TargetSideDistance targetSideDistanceChanged  = new TargetSideDistance(s_Swerve,0);
-    //private final TargetMegaTag2 target3DMaTag2 = new TargetMegaTag2(s_Swerve);
-    private final TargetAngleSide targetAngleSide = new TargetAngleSide(s_Swerve, 0);
-
-    // Scoring
-    private final L1_Pt1 l1_Pt1 = new L1_Pt1(elevator, coralHold, coralPivot, algaePivot);
-    private final L1_Pt2 l1_Pt2 = new L1_Pt2(elevator, coralHold, coralPivot, algaePivot);
-    private final L2_Pt1 l2_Pt1 = new L2_Pt1(elevator, coralHold, coralPivot, algaePivot);
-    private final L2_Pt2 l2_Pt2 = new L2_Pt2(elevator, coralHold, coralPivot, algaePivot);
-    private final L3_Pt1 l3_Pt1 = new L3_Pt1(elevator, coralHold, coralPivot, algaePivot);
-    private final L3_Pt2 l3_Pt2 = new L3_Pt2(elevator, coralHold, coralPivot, algaePivot);
-    private final L4_Pt1 l4_Pt1 = new L4_Pt1(elevator, coralHold, coralPivot, algaePivot);
-    private final L4_Pt2 l4_Pt2 = new L4_Pt2(elevator, coralHold, coralPivot, algaePivot);
-    private final L4_Pt2_Algae_Bump l4_Pt2_Algae_Bump = new L4_Pt2_Algae_Bump(elevator, coralPivot, coralHold, algaePivot, algaeHold, s_Swerve);
-
+  //  //Drive
+  //   private final OrientWithLL orientWithLL = new OrientWithLL(s_Swerve);
 
     //Auto
    // private final DriveFwd driveFwd = new DriveFwd(s_Swerve, false, 10); //9
    //private final TurnOnly turnOnlyNeg90 = new TurnOnly(s_Swerve, false, -90);
-   private final DriveFwdAndSideAndTurn driveFwdAndSideAndTurn = new DriveFwdAndSideAndTurn(s_Swerve, false, 200, 100, 45);
+
     //private final DriveFwd driveFwd9 = new DriveFwd(s_Swerve, false, 9);//
    //private final TurnOnly turnOnly1125 = new TurnOnly(s_Swerve, false, 11.25);
    //private final TurnOnly turnOnly45 = new TurnOnly(s_Swerve, false, 45);
@@ -174,24 +95,7 @@ public class RobotContainer {
    // private final DriveSideways driveSideways675 = new DriveSideways(s_Swerve, false, 6.5);
    // private final DriveSideways driveSidewaysNeg675 = new DriveSideways(s_Swerve, false, -6.5);
 
-    private final Leg1and2Practice leg1and2Practice = new Leg1and2Practice(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-
-    private final Leg1Left leg1Left = new Leg1Left(s_Swerve,  elevator, algaePivot, coralPivot, coralHold);
-    private final Leg2Left leg2Left = new Leg2Left(s_Swerve, coralHold, coralPivot, elevator);
-    private final Leg3Left leg3Left = new Leg3Left(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-    private final FullRunLeft fullRunLeft = new FullRunLeft(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-    private final Legs1and2Left legs1and2Left = new Legs1and2Left(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-    private final Leg1PracticeFieldTest leg1PracticeFieldTest = new Leg1PracticeFieldTest(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-
-    private final Leg1Right leg1Right = new Leg1Right(s_Swerve,  elevator, algaePivot, coralPivot, coralHold);
-    private final Leg2Right leg2Right = new Leg2Right(s_Swerve, coralHold, coralPivot, elevator);
-    private final Leg3Right leg3Right = new Leg3Right(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-    private final FullRunRight fullRunRight = new FullRunRight(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-    private final Legs1and2Right legs1and2Right = new Legs1and2Right(s_Swerve, elevator, algaePivot, coralPivot, coralHold);
-
-    private final CtrScore1 ctrScore1 = new CtrScore1(s_Swerve, elevator, algaePivot, algaeHold, coralPivot, coralHold);
-    private final CenterNoAlgae centerNoAlgae = new CenterNoAlgae(s_Swerve, elevator, algaePivot, algaeHold, coralPivot, coralHold);
-   // private final DriveWithPath driveWithPathLeg1 = new DriveWithPath(s_Swerve, false);
+    
     
       
   //Elevator
@@ -317,13 +221,6 @@ public class RobotContainer {
 
 //DRIVER CONTROLLER
 
-//targeting
-x.onTrue(fieldCentricTargetLeft);
-//b.onTrue(newNewFieldCentricTargetLeft);
-a.onTrue(newFieldCentricTargetLeft);
-//a.onTrue(fieldCentricTargetAlgae);
-//b.onTrue(fieldCentricTargetRight);
-
 //driving & gyro
 //rb robot centric already binded
 //y reset gyro already binded
@@ -341,20 +238,6 @@ view.onTrue(climbDownSequence);
 // rm.onTrue(Constants.Swerve.throttle = 0.2);
 
 //AUX CONTROLLER
-
-//scoring
-
-//x1.onTrue(l1_Pt1);
-new Trigger(() -> x1.getAsBoolean() && rt1.getAsBoolean()).onTrue(l4_Pt2_Algae_Bump);
-
-a1.onTrue(l2_Pt1);
-new Trigger(() -> a1.getAsBoolean() && rt1.getAsBoolean()).onTrue(l2_Pt2);
-
-b1.onTrue(l3_Pt1);
-new Trigger(() -> b1.getAsBoolean() && rt1.getAsBoolean()).onTrue(l3_Pt2);
-
-y1.onTrue(l4_Pt1);
-new Trigger(() -> y1.getAsBoolean() && rt1.getAsBoolean()).onTrue(l4_Pt2);
 
 //coral pivot
 view1.whileTrue(coralPivotUp);
@@ -388,7 +271,7 @@ lt1.onTrue(algaeHighPickup);
 // rb1.onTrue(turnOnly90);
 // lb1.onTrue(turnOnlyNeg90);
 
-leftPov.whileTrue(driveFwdAndSideAndTurn);
+
 
 //rb.whileTrue(targetAllParallel);
 //upPov.whileTrue(targetForwardDistance);
@@ -478,7 +361,7 @@ leftPov.whileTrue(driveFwdAndSideAndTurn);
   // } else if (autoSwitch1.get() && !autoSwitch2.get() && !autoSwitch3.get() && !autoSwitch4.get()) {
   //   command =  fullRunLeft;
   // } else if (autoSwitch1.get() && !autoSwitch2.get() && !autoSwitch3.get() && autoSwitch4.get()) {
-  //   //  command =  legs1and2Left;
+  //   //  command =  lesssgs1and2Left;
   //   command = leg1PracticeFieldTest;
   //  // command = leg1and2Practice;
   // } else if (autoSwitch1.get() && !autoSwitch2.get() && autoSwitch3.get() && autoSwitch4.get()) {
@@ -489,7 +372,6 @@ leftPov.whileTrue(driveFwdAndSideAndTurn);
   // else if (autoSwitch1.get() && autoSwitch2.get() && autoSwitch3.get() && !autoSwitch4.get()) {
   //   command = centerNoAlgae;
   // } 
-  command = leg1PracticeFieldTest;
  return command;
 }
 

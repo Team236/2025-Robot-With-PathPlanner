@@ -8,8 +8,8 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 6.7698683250572955,
-        "y": 2.2362412759853534
+        "x": 6.769634013429795,
+        "y": 2.2226471629348943
       },
       "isLocked": false,
       "linkedName": null
@@ -20,8 +20,8 @@
         "y": 2.2226471629348943
       },
       "prevControl": {
-        "x": 6.837838890309593,
-        "y": 2.2362412759853534
+        "x": 6.83797215312016,
+        "y": 2.2226471629348943
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,9 +33,20 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
+      "name": "algaeGrab",
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": 0.5,
+      "command": {
+        "type": "named",
+        "data": {
+          "name": "algaeGrab"
+        }
+      }
+    },
+    {
       "name": "coralGrab",
-      "waypointRelativePos": 0.6657931970365175,
-      "endWaypointRelativePos": null,
+      "waypointRelativePos": 0.5,
+      "endWaypointRelativePos": 1.0,
       "command": {
         "type": "named",
         "data": {
@@ -54,13 +65,13 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 0.0
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,
   "idealStartingState": {
-    "velocity": 0,
-    "rotation": 0.0
+    "velocity": 0.0,
+    "rotation": 180.0
   },
   "useDefaultConstraints": true
 }

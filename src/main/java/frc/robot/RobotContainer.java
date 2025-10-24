@@ -157,6 +157,7 @@ public class RobotContainer {
     // PathPlanner Named Commands registration
     NamedCommands.registerCommand("coralGrab", coralGrab);
     NamedCommands.registerCommand("coralRelease", coralRelease);
+    NamedCommands.registerCommand("algaeGrab", algaeGrab);
 
     // Configure the trigger bindings
     configureBindings();
@@ -258,7 +259,7 @@ leftPov1.whileTrue(algaeRelease);
 rightPov1.whileTrue(dangerElevatorDown);//manual elevator down
 
 //algae scoring
-lb1.onTrue(algaeGrab);//grab and hold
+upPov.onTrue(algaeGrab);//grab and hold
 lm1.onTrue(algaeLowPickup);
 lt1.onTrue(algaeHighPickup);
 

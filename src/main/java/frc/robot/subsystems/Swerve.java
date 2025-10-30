@@ -799,7 +799,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
           if(mt1.tagCount == 0) {
              doUpdate = false; 
             }
-          if(doUpdate) {     // if doRejectUpdate is false (or NOT true), then update the pose estimator
+          if(doUpdate) {     // if doUpdate is true, then update the pose estimator (this used to be doRejectUpdate; logic was changed)
             m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,9999999));
             m_poseEstimator.addVisionMeasurement(
                 mt1.pose,
@@ -811,6 +811,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
             LimelightHelpers.SetRobotOrientation("limelight", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
             LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
             
+            // sometimes when starting robot/building code, mt2 == null for a split second, so need to check for that or code errors
             if(mt2 == null && Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
             {
                 doUpdate = false;

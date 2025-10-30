@@ -139,7 +139,9 @@ public static final class Swerve {
         public static final double wheelCircumference = chosenModule.wheelCircumference;
 
         /* Swerve Kinematics 
-         * No need to ever change this unless you are not doing a traditional rectangular/square 4 module swerve */
+         * No need to ever change this unless you are not doing a traditional rectangular/square 4 module swerve 
+         * Since these wheel positions are declared relative to the physical center of the robot, the center is 0, 0,
+         * or in other words, its pose is it physical center */
          public static final SwerveDriveKinematics swerveKinematics = new SwerveDriveKinematics(
             new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
             new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),

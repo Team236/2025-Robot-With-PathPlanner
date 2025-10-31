@@ -771,7 +771,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
 
          }
     }
-
+        //THIS IS NOT CAMAL CASE SMH
     public void MegaTag2UpdateOdometry() {
         /* Replaced below with m_poseEstimator.update(getGyroYaw(), getModulePositions()); as done in periodic for swerve odometry
         m_poseEstimator.update(
@@ -806,13 +806,13 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
                 mt1.timestampSeconds);
           }
         }
-        else if (useMegaTag2 == true)
+        else if (useMegaTag2)
         {   // only incorporate Limelight's estimates when more than one tag is visible (tagcount >= 1)
             LimelightHelpers.SetRobotOrientation("limelight", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees(), 0, 0, 0, 0, 0);
             LimelightHelpers.PoseEstimate mt2 = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight");
             
             // sometimes when starting robot/building code, mt2 == null for a split second, so need to check for that or code errors
-            if(mt2 == null && Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
+            if(mt2 == null || Math.abs(gyro.getAngularVelocityZWorld().getValueAsDouble()) > 720) // if our angular velocity is greater than 720 degrees per second, ignore vision updates
             {
                 doUpdate = false;
             }
@@ -839,6 +839,8 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
         MegaTag2UpdateOdometry();
        SmartDashboard.putNumber("** RobotPoseX (Estimator)", m_poseEstimator.getEstimatedPosition().getX());
        SmartDashboard.putNumber("** RobotPoseY (Estimator)", m_poseEstimator.getEstimatedPosition().getY());
+
+       SmartDashboard.putNumber("MegaTag2Rotation (Estimator)", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees());
     //    System.out.println(swerveOdometry.getPoseMeters().getX() + " " + swerveOdometry.getPoseMeters().getY() + " Rotation: " + swerveOdometry.getPoseMeters().getRotation().getDegrees());
 
         //for(SwerveModule mod : mSwerveMods){

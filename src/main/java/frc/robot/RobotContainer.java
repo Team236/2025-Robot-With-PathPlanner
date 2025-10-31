@@ -264,7 +264,7 @@ lm1.onTrue(algaeLowPickup);
 lt1.onTrue(algaeHighPickup);
 
 //path planner
-x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("EventMarkerTest"), Set.of(s_Swerve)));
+x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("Test"), Set.of(s_Swerve)));
 
 //a.onTrue(turnOnly225);
 //b.onTrue(turnOnlyNeg90);

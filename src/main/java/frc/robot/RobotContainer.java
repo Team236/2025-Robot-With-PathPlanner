@@ -39,6 +39,7 @@ import frc.robot.commands.ElevatorCommands.ClimbDownSequence;
 import frc.robot.commands.ElevatorCommands.DangerManualUpDown;
 import frc.robot.commands.ElevatorCommands.ElevMotionMagicPID;
 import frc.robot.commands.ElevatorCommands.PrepForClimb;
+import frc.robot.commands.PathPlanner.SequentialPathTest;
 import frc.robot.subsystems.AlgaeHold;
 import frc.robot.subsystems.AlgaePivot;
 import frc.robot.subsystems.Elevator;
@@ -262,9 +263,9 @@ rightPov1.whileTrue(dangerElevatorDown);//manual elevator down
 upPov.onTrue(algaeGrab);//grab and hold
 lm1.onTrue(algaeLowPickup);
 lt1.onTrue(algaeHighPickup);
-
 //path planner
 x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("Test"), Set.of(s_Swerve)));
+b.onTrue(Commands.defer(() -> new SequentialPathTest(s_Swerve), Set.of(s_Swerve)));
 
 //a.onTrue(turnOnly225);
 //b.onTrue(turnOnlyNeg90);

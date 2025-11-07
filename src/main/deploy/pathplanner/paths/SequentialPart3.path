@@ -3,25 +3,25 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 5.98,
-        "y": 1.7561215753424653
+        "x": 4.907474837144413,
+        "y": 1.7740414322697473
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.16863622263279,
-        "y": 1.739890940010134
+        "x": 5.907474837144413,
+        "y": 1.7740414322697473
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 5.078681506849315,
-        "y": 2.3571489726027393
+        "x": 6.620333081502248,
+        "y": 1.7740414322697473
       },
       "prevControl": {
-        "x": 5.997216755508194,
-        "y": 2.3571489726027393
+        "x": 5.620333081502248,
+        "y": 1.7740414322697475
       },
       "nextControl": null,
       "isLocked": false,
@@ -33,13 +33,13 @@
   "pointTowardsZones": [],
   "eventMarkers": [
     {
-      "name": "coralGrab",
-      "waypointRelativePos": 0.0000640158837831533,
-      "endWaypointRelativePos": 1.0,
+      "name": "algaeGrab",
+      "waypointRelativePos": 0.28537652209209724,
+      "endWaypointRelativePos": 0.67,
       "command": {
         "type": "named",
         "data": {
-          "name": "coralGrab"
+          "name": "algaeGrab"
         }
       }
     }

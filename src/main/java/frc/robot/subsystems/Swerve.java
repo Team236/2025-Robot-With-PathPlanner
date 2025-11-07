@@ -826,7 +826,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
                 // measurements a lot less. In this case, the rotation stddev was enormous (9999999), so its essentially ignored entirely.
                 // i've set it to ten degrees for now, because too low may be erratic, but it can be tuned
 
-                m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7,Math.toRadians(10))); // n3 was 9999999 
+                m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.7,.7, 0.01)); // n3 was 9999999 
                 m_poseEstimator.addVisionMeasurement(
                     mt2.pose,
                     mt2.timestampSeconds);

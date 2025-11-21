@@ -771,7 +771,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
 
          }
     }
-        //THIS IS NOT CAMAL CASE SMH
+
     public void MegaTag2UpdateOdometry() {
         /* Replaced below with m_poseEstimator.update(getGyroYaw(), getModulePositions()); as done in periodic for swerve odometry
         m_poseEstimator.update(
@@ -784,7 +784,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
             });
         */   m_poseEstimator.update(getGyroYaw(), getModulePositions());
 
-        boolean useMegaTag2 = true; //set to false to use MegaTag1
+        boolean useMegaTag2 = false; //set to false to use MegaTag1
         boolean doUpdate = true;
         // evaluating which Megatag one or two to use based on above boolean value and 
         // only incorporate Limelight's estimates when more than one tag is visible (tagcount >= 1)
@@ -800,7 +800,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
              doUpdate = false; 
             }
           if(doUpdate) {     // if doUpdate is true, then update the pose estimator (this used to be doRejectUpdate; logic was changed)
-            m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,9999999));
+            m_poseEstimator.setVisionMeasurementStdDevs(VecBuilder.fill(.5,.5,0.01));
             m_poseEstimator.addVisionMeasurement(
                 mt1.pose,
                 mt1.timestampSeconds);

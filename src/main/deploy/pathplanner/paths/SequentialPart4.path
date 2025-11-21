@@ -34,8 +34,8 @@
   "eventMarkers": [
     {
       "name": "coralGrab",
-      "waypointRelativePos": 0.5574364075429339,
-      "endWaypointRelativePos": 0.7087322141476627,
+      "waypointRelativePos": 0.0,
+      "endWaypointRelativePos": 1.0,
       "command": {
         "type": "named",
         "data": {

@@ -844,8 +844,8 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
 
     //    swerveOdometry.update(getGyroYaw(), getModulePositions());
         MegaTag2UpdateOdometry();
-       SmartDashboard.putNumber("** RobotPoseX (Estimator)", m_poseEstimator.getEstimatedPosition().getX());
-       SmartDashboard.putNumber("** RobotPoseY (Estimator)", m_poseEstimator.getEstimatedPosition().getY());
+       SmartDashboard.putNumber("** RobotPoseX (Estimator)", Units.metersToInches( m_poseEstimator.getEstimatedPosition().getX()));
+       SmartDashboard.putNumber("** RobotPoseY (Estimator)", Units.metersToInches( m_poseEstimator.getEstimatedPosition().getY()));
 
        SmartDashboard.putNumber("MegaTag2Rotation (Estimator)", m_poseEstimator.getEstimatedPosition().getRotation().getDegrees());
     //    System.out.println(swerveOdometry.getPoseMeters().getX() + " " + swerveOdometry.getPoseMeters().getY() + " Rotation: " + swerveOdometry.getPoseMeters().getRotation().getDegrees());
@@ -858,7 +858,7 @@ public Trajectory getTargetingTrajectory(double fwdDist1, double sideDist1, doub
          //}
     
          /* 
-       poseAngle = LimelightHelpers.getTargetPose_CameraSpace("limelight")[5];
+       poseAngle = LimelightHelpers.getTargetPose_CameraSpace("l1 melight")[5];
        SmartDashboard.putNumber("TargetingAngle in swerve: ", poseAngle);
        poseForwardDistance = LimelightHelpers.getTargetPose_ameraSpace("limelight")[2];
       SmartDashboard.putNumber("TargetingForwardDistance in swerve: ", poseForwardDistance / 0.0254);

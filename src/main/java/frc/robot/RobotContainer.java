@@ -41,6 +41,7 @@ import frc.robot.commands.ElevatorCommands.ElevMotionMagicPID;
 import frc.robot.commands.ElevatorCommands.PrepForClimb;
 import frc.robot.commands.PathPlanner.SequentialPathTest;
 import frc.robot.commands.PathPlanner.SequentialPathTest2;
+import frc.robot.commands.PathPlanner.SequentialPathTest3;
 import frc.robot.commands.PathPlanner.SequentialPathsCombined;
 import frc.robot.subsystems.AlgaeHold;
 import frc.robot.subsystems.AlgaePivot;
@@ -110,6 +111,7 @@ public class RobotContainer {
   private final ClimbDownSequence climbDownSequence= new ClimbDownSequence(elevator, algaePivot, Constants.Elevator.ELEV_CLIMB_DOWN_SPEED);
   private final PrepForClimb prepForClimb = new PrepForClimb(elevator,  algaePivot);
 //private final ElevMotionMagicPID motionMagicToTestLevel  = new ElevMotionMagicPID(elevator, 40);
+  private final ElevMotionMagicPID Level3TestPID = new ElevMotionMagicPID(elevator, 15);
  private final ElevMotionMagicPID motionMagicToBottom  = new ElevMotionMagicPID(elevator, 0);
 
 
@@ -161,6 +163,8 @@ public class RobotContainer {
     NamedCommands.registerCommand("coralGrab", coralGrab);
     NamedCommands.registerCommand("coralRelease", coralRelease);
     NamedCommands.registerCommand("algaeGrab", algaeGrab);
+    NamedCommands.registerCommand("elevator3", Level3TestPID);
+    NamedCommands.registerCommand("elevatorBottom", motionMagicToBottom);
 
     // Configure the trigger bindings
     configureBindings();
@@ -241,6 +245,7 @@ downPov.whileTrue(dangerElevatorDown);
 //rightPov.onTrue(leg1and2Practice);
 menu.onTrue(prepForClimb);
 view.onTrue(climbDownSequence);
+lt.onTrue(Level3TestPID);
 
 // rm.onTrue(Constants.Swerve.throttle = 0.2);
 
@@ -262,11 +267,13 @@ leftPov1.whileTrue(algaeRelease);
 rightPov1.whileTrue(dangerElevatorDown);//manual elevator down
 
 //algae scoring
-upPov.onTrue(algaeGrab);//grab and hold
+// upPov.onTrue(algaeGrab);//grab and hold
 lm1.onTrue(algaeLowPickup);
 lt1.onTrue(algaeHighPickup);
 //path planner
-x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("Test"), Set.of(s_Swerve)));
+//x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("Test"), Set.of(s_Swerve)));
+//x.onTrue(Commands.defer(() -> s_Swerve.followPathCommand("AlgaePickupL3"), Set.of(s_Swerve)));
+x.onTrue(new SequentialPathTest3(s_Swerve));
 rb.onTrue(new SequentialPathsCombined(s_Swerve));
 a.onTrue(new SequentialPathTest(s_Swerve));
 b.onTrue(new SequentialPathTest2(s_Swerve));
